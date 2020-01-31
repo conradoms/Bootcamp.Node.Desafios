@@ -10,6 +10,25 @@ const projects = [
     {id: "3", title: "Projeto 3", tasks:["Nova tarefa"]}
 ];
 
+let contadorDeChamadasAPI = 0;
+
+server.use((req, res, next) => {
+    contadorDeChamadasAPI++;
+    console.log(contadorDeChamadasAPI);
+    next();
+});
+
+function checkIfProjectExists(req, res, next){
+    const id = req.params.id;
+    
+    if(!projects[id]){
+        return res.json({ error: 'Não existe um projeto com este id!'});
+    }
+
+    req.id = id;
+    next();
+}
+
 server.get('/projects', (req, res) => {
     return res.json(projects);
 });
@@ -20,27 +39,24 @@ server.post('/projects', (req, res) => {
     return res.json(projects);
 });
 
-server.put('/projects/:id', (req, res) => {
+server.put('/projects/:id', checkIfProjectExists, (req, res) => {
     const { title } = req.body;
-    const { id } = req.params;
 
-    projects[id].title = title;
+    projects[req.id].title = title;
 
     return res.json(projects);
 });
 
-server.delete('/projects/:id', (req, res) => {
-    const { id } = req.params;
-    projects.splice(id, 1);
+server.delete('/projects/:id', checkIfProjectExists, (req, res) => {
+    projects.splice(req.id, 1);
 
     return res.json(projects);
 });
 
-server.post('/projects/:id/tasks', (req, res) => {
-    const { id } = req.params;
+server.post('/projects/:id/tasks', checkIfProjectExists, (req, res) => {
     const { title } = req.body;
 
-    projects[id].tasks.push(title);
+    projects[req.id].tasks.push(title);
 
     return res.json(projects);
 });
